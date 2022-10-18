@@ -1,3 +1,8 @@
+function event_say(e)
+    local guildmaster = require("guildmaster");
+    guildmaster.do_buffs_and_ports(e);
+end
+
 function event_spawn(e)
     -- peq_halloween
     if (eq.is_content_flag_enabled("peq_halloween")) then
