@@ -12,6 +12,14 @@ if (eq.is_the_scars_of_velious_enabled()) then
     continents["Velious"] = 0 -- Velious Only
 end
 
+continentsWar = {}
+continentsWar["Antonica"] = 0
+continentsWar["Faydwer"] = 0
+continentsWar["Odus"] = 0
+if (eq.is_the_ruins_of_kunark_enabled()) then
+    continentsWar["Kunark"] = 0 -- Kunark Only
+end
+
 function guildmaster.do_buffs_and_ports(e)
     local mob_class = e.self:GetClass();
     
@@ -20,6 +28,7 @@ function guildmaster.do_buffs_and_ports(e)
     elseif (mob_class == 29) then shaman_buffs(e)
     elseif (mob_class == 31) then wizard_ports(e)
     elseif (mob_class == 33) then enchanter_buffs(e)
+    elseif (mob_class == 20) then warrior_ports(e)
     end
 end
 
@@ -47,9 +56,14 @@ function take_money(client)
 end
 
 function cleric_buffs(e)
+    if(e.message:findi("cure")) then
+        e.self:Say("Cleansing your soul.");
+        e.self:CastSpell(38057,e.other:GetID(),0,1); -- Spell: Purify Soul
+        return
+    end
     if (e.message:findi("buffs")) then
         if (take_money(e.other) ~= true) then
-            e.self:Say("I'm sorry, i cannot buff you unless you have sufficient money.")
+            e.self:Say("I'm sorry, I cannot buff you unless you have sufficient money.")
             return
         end
         -- HP
@@ -158,9 +172,9 @@ function cleric_buffs(e)
     else
         local plat = get_money_amount(e.other);
         if plat > 0 then
-            e.self:Say("As a cleric guildmaster, for a fee of " .. plat .. " platinum pieces, I can provide you with [" .. eq.say_link("buffs") .. "] to assist you in your adventures.")
+            e.self:Say("As a cleric guildmaster, for a fee of " .. plat .. " platinum pieces, I can provide you with [" .. eq.say_link("buffs") .. "] to assist you in your adventures. I can also [" .. eq.say_link("cure") .. "] you at no charge.")
         else
-            e.self:Say("As a cleric guildmaster, for no fee, I can provide you with [" .. eq.say_link("buffs") .. "] to assist you in your adventures.")
+            e.self:Say("As a cleric guildmaster, for no fee, I can provide you with [" .. eq.say_link("buffs") .. "] to assist you in your adventures. I can also [" .. eq.say_link("cure") .. "] you at no charge.")
         end   
     end
 end
@@ -197,7 +211,7 @@ function druid_ports_and_buffs(e)
 
     if (e.message:findi("buffs")) then
         if (take_money(e.other) ~= true) then
-            e.self:Say("I'm sorry, i cannot buff you unless you have sufficient money.")
+            e.self:Say("I'm sorry, I cannot buff you unless you have sufficient money.")
             return
         end
         -- HP Type 1
@@ -333,7 +347,7 @@ function druid_ports_and_buffs(e)
                 if (take_money(e.other)) then 
                     eq.SelfCast(v);
                 else
-                    e.self:Say("I'm sorry, i cannot teleport you unless you have sufficient money.")
+                    e.self:Say("I'm sorry, I cannot teleport you unless you have sufficient money.")
                 end
                 return
             end
@@ -351,7 +365,7 @@ end
 function enchanter_buffs(e)
     if (e.message:findi("buffs")) then        
         if (take_money(e.other) ~= true) then
-            e.self:Say("I'm sorry, i cannot buff you unless you have sufficient money.")
+            e.self:Say("I'm sorry, I cannot buff you unless you have sufficient money.")
             return
         end
         -- Haste
@@ -426,7 +440,7 @@ end
 function shaman_buffs(e)
     if (e.message:findi("buffs")) then
         if (take_money(e.other) ~= true) then
-            e.self:Say("I'm sorry, i cannot buff you unless you have sufficient money.")
+            e.self:Say("I'm sorry, I cannot buff you unless you have sufficient money.")
             return
         end
         -- Talisman
@@ -630,6 +644,123 @@ function shaman_buffs(e)
     end
 end
 
+
+function warrior_ports(e)
+    local antonica_zones = {}
+    antonica_zones["Grobb"] = 46
+    antonica_zones["Halas"] = 30
+    antonica_zones["Neriak"] = 25
+    antonica_zones["Freeport"] = 9
+    antonica_zones["North Qeynos"] = 2
+    antonica_zones["Oggok"] = 47
+    antonica_zones["Rivervale"] = 20
+    antonica_zones["Surefall Glade"] = 4
+    local faydwer_zones = {}
+    faydwer_zones["Ak'Anon"] = 56
+    faydwer_zones["Felwithe"] = 61
+    faydwer_zones["Kaladim"] = 68
+    faydwer_zones["Kelethin"] = 54
+    local odus_zones = {}
+    odus_zones["Erudin"] = 24
+    odus_zones["Paineel"] = 38
+    local kunark_zones = {} -- Kunark Only
+    if (eq.is_the_ruins_of_kunark_enabled()) then
+        kunark_zones["East Cabilis"] = 78
+    end
+
+    if (e.message:findi("teleport")) then
+        e.self:Say("I can teleport you to the following continents: " .. build_say_links(continentsWar))
+    elseif (e.message:findi("antonica")) then
+        e.self:Say("I can teleport you to the following zones: " .. build_say_links(antonica_zones))
+    elseif (e.message:findi("faydwer")) then
+        e.self:Say("I can teleport you to the following zones: " .. build_say_links(faydwer_zones))
+    elseif (e.message:findi("odus")) then
+        e.self:Say("I can teleport you to the following zones: " .. build_say_links(odus_zones))
+    elseif (e.message:findi("kunark")) then
+        e.self:Say("I can teleport you to the following zones: " .. build_say_links(kunark_zones))
+    else
+        local all_zones = {}
+        merge_tables(all_zones, antonica_zones, faydwer_zones, odus_zones, kunark_zones)
+        for k, v in pairs(all_zones) do 
+            if (e.message:findi(k)) then
+                if (take_money(e.other)) then
+                    if (v == 4) then -- SFG/qeynos hills
+                        e.other:MovePC(v, -180.62, 5122.38, 37.05, 154);
+                        return
+                    end
+                    if (v == 20) then -- rivervale/kith
+                        e.other:MovePC(v, -180.62, 5122.38, 37.05, 154);
+                        return
+                    end
+                    if (v == 47) then -- oggok/feerrott
+                        e.other:MovePC(v, 733.30, 1378.85, 58.54, 147);
+                        return
+                    end
+                    if (v == 2) then -- north qeynos
+                        e.other:MovePC(v, -79.11, 423.02, 3.13, 471);
+                        return
+                    end
+                    if (v == 9) then -- freportw
+                        e.other:MovePC(v, 177.93, 371.44, -24.87, 267.25);
+                        return
+                    end
+                    if (v == 25) then -- neriak/nektulos
+                        e.other:MovePC(v, -698.41, 1743.97, 71.61, 431.50);
+                        return
+                    end
+                    if (v == 30) then -- halas/everfrost
+                        e.other:MovePC(v, 629, 3139, -60.78, 481.50);
+                        return
+                    end
+                    if (v == 46) then -- grobb/innothule
+                        e.other:MovePC(v, -649, -2232.72, -1.83, 248.50);
+                        return
+                    end
+                    if (v == 56) then -- akanon/steamfont
+                        e.other:MovePC(v, 413.01, -1448.13, -104.20, 222.50);
+                        return
+                    end
+                    if (v == 61) then -- felwithe/gfaydark
+                        e.other:MovePC(54, -2304, -2165.87, 37.98, 482.50);
+                        return
+                    end
+                    if (v == 54) then -- kelethin/gfaydark
+                        e.other:MovePC(v, 10, -20, -0.72, 418.75);
+                        return
+                    end
+                    if (v == 68) then -- kaladim/butcher
+                        e.other:MovePC(v, -525.99, 2679.97, 53, 79.25);
+                        return
+                    end
+                    if (v == 38) then -- paineel/tox
+                        e.other:MovePC(v, -433.18, -2333.35, -46.37, 161.25);
+                        return
+                    end
+                    if (v == 24) then -- erudin/tox
+                        e.other:MovePC(38, 212.18, 2290, -46.37, 508.25);
+                        return
+                    end
+                    if (v == 78) then -- cabilis/field of bone
+                        e.other:MovePC(v, 3697.83, -2341.48, 7.22, 331.25);
+                        return
+                    end
+                    e.self:Say("I'm sorry, I failed to teleport you to your destination. Try another location")
+                else
+                    e.self:Say("I'm sorry, I cannot teleport you unless you have sufficient money.")
+                end
+                return
+            end
+        end
+    
+        local plat = get_money_amount(e.other);
+        if plat > 0 then
+            e.self:Say("As a warrior guildmaster, for a fee of " .. plat .. " platinum pieces, I can [" .. eq.say_link("teleport") .. "] you somewhere else.")
+        else
+            e.self:Say("As a warrior guildmaster, for no fee, I can [" .. eq.say_link("teleport") .. "] you somewhere else.")
+        end  
+    end
+end
+
 function wizard_ports(e)
     local antonica_zones = {}
     antonica_zones["Cazic Thule"] = 546
@@ -655,6 +786,12 @@ function wizard_ports(e)
         velious_zones["Wakening Lands"] = 2027
     end
 
+    if(e.message:findi("bind")) then
+        e.self:Say("Binding your soul. You will return here when you die.");
+        e.self:CastSpell(2049,e.other:GetID(),0,1); -- Spell: Bind Affinity
+        return
+    end
+
     if (e.message:findi("teleport")) then
         e.self:Say("I can teleport you to the following continents: " .. build_say_links(continents))
     elseif (e.message:findi("antonica")) then
@@ -675,7 +812,7 @@ function wizard_ports(e)
                 if (take_money(e.other)) then 
                     eq.SelfCast(v);
                 else
-                    e.self:Say("I'm sorry, i cannot teleport you unless you have sufficient money.")
+                    e.self:Say("I'm sorry, I cannot teleport you unless you have sufficient money.")
                 end
                 return
             end
@@ -683,9 +820,9 @@ function wizard_ports(e)
     
         local plat = get_money_amount(e.other);
         if plat > 0 then
-            e.self:Say("As a wizard guildmaster, for a fee of " .. plat .. " platinum pieces, I can [" .. eq.say_link("teleport") .. "] you somewhere else.")
+            e.self:Say("As a wizard guildmaster, for a fee of " .. plat .. " platinum pieces, I can [" .. eq.say_link("teleport") .. "] you somewhere else. I can also [" .. eq.say_link("bind") .. "] you.")
         else
-            e.self:Say("As a wizard guildmaster, for no fee, I can [" .. eq.say_link("teleport") .. "] you somewhere else.")
+            e.self:Say("As a wizard guildmaster, for no fee, I can [" .. eq.say_link("teleport") .. "] you somewhere else. I can also [" .. eq.say_link("bind") .. "] you.")
         end  
     end
 end
