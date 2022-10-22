@@ -843,6 +843,9 @@ function pairs_by_keys (t, f)
 end
 
 function merge_tables (t1, ...)
+    if args == nil then
+        return
+    end
     for i,v in ipairs(arg) do
         for k, v in pairs(v) do
             t1[k] = v
