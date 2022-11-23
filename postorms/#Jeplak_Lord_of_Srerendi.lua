@@ -35,7 +35,7 @@ function event_timer(e)
 	elseif e.timer == "adds" and e.self:IsEngaged() then
 		eq.stop_timer(e.timer);
 		eq.set_timer("adds", 60 * 1000);
-		spawn_adds(e);	--spawn adds
+		spawn_adds(e,2,8);	--spawn adds
 	elseif e.timer == "monitor" then
 		if trash_check() and not e.self:IsEngaged() then
 			eq.unique_spawn(210179,0,0,346,-2513,-440.5,0); --repop untargetable version
@@ -76,9 +76,9 @@ function activate(mob)
 
 end
 
-function spawn_adds()
-	local rand = math.random(2,8);
-	for n = 1,rand do
+function spawn_adds(e,low,high)
+	local rand = math.random(low,high);
+	for n = 1,high do
 		mob = eq.spawn2(eq.ChooseRandom(210234,210233),0,0,e.self:GetX() + math.random(-50,50),e.self:GetY() + math.random(-50,50),e.self:GetZ() - 10,e.self:GetHeading());	--#a_lost_soul or #a_mangled_traveller
 		mob:AddToHateList(e.self:GetHateRandom(),1);
 	end
